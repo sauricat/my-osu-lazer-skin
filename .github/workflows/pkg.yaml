@@ -1,0 +1,26 @@
+name: Publish Package
+on:
+  push:
+    branches:
+      - main
+permissions:
+  contents: write
+jobs:
+  build-and-publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Build
+        run: |
+          VERSION=$(grep -i '^Version[[:space:]]*:' skin/skin.ini | awk -F':' '{print $2}' | tr -d '[:space:]\r')
+          echo "$VERSION"
+          cd skin
+          zip -r ../$VERSION.osk ./*
+          echo "SKIN_VERSION=$VERSION" >> $GITHUB_ENV
+      - name: Publish to GitHub Release
+        uses: softprops/action-gh-release@v3
+        with:
+          tag_name: v${{ env.SKIN_VERSION }}
+          name: Release v${{ env.SKIN_VERSION }}
+          files: ./*.osk
